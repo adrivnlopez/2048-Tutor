@@ -1,4 +1,4 @@
-from tkinter import Frame, Label, CENTER
+from tkinter import Frame, Label, CENTER, messagebox
 import random
 import logic
 import constants as c
@@ -10,7 +10,24 @@ class GameGrid(Frame):
     def __init__(self):
         Frame.__init__(self)
 
-        self.grid()
+        self.grid(padx=50, pady=50)  
+        
+        # title or header frame
+        self.title_frame = Frame(self.master)
+        self.title_frame.grid(pady=(20, 10)) 
+        
+        # title label
+        title_label = Label(self.title_frame, text="2048 Game", font=("Verdana", 24, "bold"))
+        title_label.grid()
+
+        # frame for potential side information or controls
+        self.info_frame = Frame(self.master)
+        self.info_frame.grid(row=0, column=1, padx=20, sticky='n')
+        
+        # score label as an example of additional feature space
+        self.score_label = Label(self.info_frame, text="Score: 0", font=("Verdana", 16))
+        self.score_label.grid(pady=10)
+
         self.master.title('2048')
         self.master.bind("<Key>", self.key_down)
 
@@ -33,12 +50,14 @@ class GameGrid(Frame):
         self.init_grid()
         self.matrix = logic.new_game(c.GRID_LEN)
         self.history_matrixs = []
+        self.score = 0
         self.update_grid_cells()
 
         self.mainloop()
 
     def init_grid(self):
-        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME,width=c.SIZE, height=c.SIZE)
+        # Increased background size slightly to accommodate more padding
+        background = Frame(self, bg=c.BACKGROUND_COLOR_GAME, width=c.SIZE + 100, height=c.SIZE + 100)
         background.grid()
 
         for i in range(c.GRID_LEN):
@@ -80,12 +99,21 @@ class GameGrid(Frame):
                         bg=c.BACKGROUND_COLOR_DICT[new_number],
                         fg=c.CELL_COLOR_DICT[new_number]
                     )
+        
+        # Update score
+        self.score_label.configure(text=f"Score: {self.calculate_score()}")
+        
         self.update_idletasks()
+
+    def calculate_score(self):
+        # Simple scoring mechanism: sum of all numbers on the grid
+        return sum(sum(row) for row in self.matrix)
 
     def key_down(self, event):
         key = event.keysym
         print(event)
-        if key == c.KEY_QUIT: exit()
+        if key == c.KEY_QUIT: 
+            self.quit()
         if key == c.KEY_BACK and len(self.history_matrixs) > 1:
             self.matrix = self.history_matrixs.pop()
             self.update_grid_cells()
@@ -98,11 +126,11 @@ class GameGrid(Frame):
                 self.history_matrixs.append(self.matrix)
                 self.update_grid_cells()
                 if logic.game_state(self.matrix) == 'win':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Win!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                    messagebox.showinfo("Congratulations!", "You Win!")
+                    self.quit()
                 if logic.game_state(self.matrix) == 'lose':
-                    self.grid_cells[1][1].configure(text="You", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
-                    self.grid_cells[1][2].configure(text="Lose!", bg=c.BACKGROUND_COLOR_CELL_EMPTY)
+                    messagebox.showinfo("Game Over", "You Lose!")
+                    self.quit()
 
     def generate_next(self):
         index = (gen(), gen())
