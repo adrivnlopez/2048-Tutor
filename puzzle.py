@@ -1,7 +1,8 @@
-from tkinter import Frame, Label, CENTER, messagebox
+from tkinter import Frame, Label, CENTER, messagebox, Button
 import random
 import logic
 import constants as c
+from ai_logic import GameAI
 
 def gen():
     return random.randint(0, c.GRID_LEN - 1)
@@ -12,21 +13,49 @@ class GameGrid(Frame):
 
         self.grid(padx=50, pady=50)  
         
-        # title or header frame
+        # bottom padding
         self.title_frame = Frame(self.master)
-        self.title_frame.grid(pady=(20, 10)) 
+        self.title_frame.grid(pady=(20, 50)) 
         
-        # title label
+        # game title
         title_label = Label(self.title_frame, text="2048 Game", font=("Verdana", 24, "bold"))
         title_label.grid()
 
-        # frame for potential side information or controls
+        # padding for side assets
         self.info_frame = Frame(self.master)
-        self.info_frame.grid(row=0, column=1, padx=20, sticky='n')
+        self.info_frame.grid(row=0, column=1, padx=40, sticky='n')
         
-        # score label as an example of additional feature space
+        # score label
         self.score_label = Label(self.info_frame, text="Score: 0", font=("Verdana", 16))
         self.score_label.grid(pady=10)
+
+        # hint toggle 
+        self.ai_hint_button = Button(
+            self.info_frame, 
+            text="Show AI Hint", 
+            command=self.toggle_hint,
+            font=("Verdana", 14)
+        )
+        self.ai_hint_button.grid(pady=10)
+
+        # hint label
+        self.hint_label = Label(
+            self.info_frame, 
+            text="", 
+            font=("Verdana", 12),
+            wraplength=200
+        )
+        self.hint_label.grid(pady=10)
+
+        # auto play toggle 
+        self.auto_play_button = Button(
+            self.info_frame, 
+            text="Start AI Play", 
+            command=self.toggle_autoplay,
+            font=("Verdana", 14)
+        )
+        self.auto_play_button.grid(pady=10)
+
 
         self.master.title('2048')
         self.master.bind("<Key>", self.key_down)
@@ -51,12 +80,99 @@ class GameGrid(Frame):
         self.matrix = logic.new_game(c.GRID_LEN)
         self.history_matrixs = []
         self.score = 0
+        self.ai = GameAI()  # Initialize the AI
+        self.hint_mode = False  # track  hint mode
+        self.auto_play_mode = False  # track play mode
         self.update_grid_cells()
+        
+        # Initial AI hint
+        self.update_hint()
 
         self.mainloop()
 
+
+    def toggle_hint(self): 
+        self.hint_mode = not self.hint_mode
+        
+        if self.hint_mode:
+            self.ai_hint_button.configure(text="Hide AI Hint")
+            self.update_hint()
+        else:
+            self.ai_hint_button.configure(text="Show AI Hint")
+            self.hint_label.configure(text="")
+
+
+    def toggle_autoplay(self):
+        self.auto_play_mode = not self.auto_play_mode
+        
+        if self.auto_play_mode:
+            # stop hint mode if it's on
+            if self.hint_mode:
+                self.toggle_hint()
+            
+            self.auto_play_button.configure(text="Stop Auto Play")
+            self.run_autoplay()
+        else:
+            self.auto_play_button.configure(text="Start Auto Play")
+            self.hint_label.configure(text="")
+
+    def update_hint(self):
+        if self.hint_mode:
+            # Get best move
+            best_move = self.ai.get_best_move(self.matrix)
+            
+            if best_move:
+                # Update hint label
+                self.hint_label.configure(text=f"Recommended Move: {best_move.capitalize()}")
+            else:
+                self.hint_label.configure(text="No recommended move")
+
+
+    def run_autoplay(self):
+        """Automatically run AI moves if AI play mode is on"""
+        if not self.auto_play_mode:
+            return
+
+        # Get best move
+        best_move = self.ai.get_best_move(self.matrix)
+        
+        if best_move:
+            # Execute the move
+            if best_move == 'up':
+                self.matrix, done = logic.up(self.matrix)
+            elif best_move == 'down':
+                self.matrix, done = logic.down(self.matrix)
+            elif best_move == 'left':
+                self.matrix, done = logic.left(self.matrix)
+            elif best_move == 'right':
+                self.matrix, done = logic.right(self.matrix)
+            
+            # Add a new tile if move was successful
+            if done:
+                self.matrix = logic.add_random_tile(self.matrix)
+                self.history_matrixs.append(self.matrix)
+                self.update_grid_cells()
+                
+                # Update hint label
+                self.hint_label.configure(text=f"AI move: {best_move.capitalize()}")
+                
+                # Check game state
+                game_status = logic.game_state(self.matrix)
+                if game_status == 'win':
+                    messagebox.showinfo("Congratulations!", "You Win!")
+                    self.auto_play_mode = False
+                    self.auto_play_button.configure(text="Start AI Play")
+                elif game_status == 'lose':
+                    messagebox.showinfo("Game Over", "You Lose!")
+                    self.auto_play_mode = False
+                    self.auto_play_button.configure(text="Start AI Play")
+        
+        # Schedule next move if AI play mode is still on
+        if self.auto_play_mode:
+            self.master.after(100, self.run_autoplay)  # 100ms delay between moves
+
+
     def init_grid(self):
-        # Increased background size slightly to accommodate more padding
         background = Frame(self, bg=c.BACKGROUND_COLOR_GAME, width=c.SIZE + 100, height=c.SIZE + 100)
         background.grid()
 
@@ -106,25 +222,36 @@ class GameGrid(Frame):
         self.update_idletasks()
 
     def calculate_score(self):
-        # Simple scoring mechanism: sum of all numbers on the grid
+        # Simple scoring mechanism
         return sum(sum(row) for row in self.matrix)
 
     def key_down(self, event):
         key = event.keysym
         print(event)
+        
+        # stop auto play mode if a key is pressed during auto-play
+        if self.auto_play_mode:
+            self.toggle_autoplay()
+        
         if key == c.KEY_QUIT: 
             self.quit()
         if key == c.KEY_BACK and len(self.history_matrixs) > 1:
             self.matrix = self.history_matrixs.pop()
             self.update_grid_cells()
             print('back on step total step:', len(self.history_matrixs))
+            # update hint after going back
+            self.update_hint()
         elif key in self.commands:
             self.matrix, done = self.commands[key](self.matrix)
             if done:
-                self.matrix = logic.add_two(self.matrix)
+                self.matrix = logic.add_random_tile(self.matrix)
                 # record last move
                 self.history_matrixs.append(self.matrix)
                 self.update_grid_cells()
+                
+                # update hint after move
+                self.update_hint()
+                
                 if logic.game_state(self.matrix) == 'win':
                     messagebox.showinfo("Congratulations!", "You Win!")
                     self.quit()
