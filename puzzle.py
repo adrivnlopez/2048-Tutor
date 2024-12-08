@@ -54,7 +54,17 @@ class GameGrid(Frame):
             command=self.toggle_autoplay,
             font=("Verdana", 14)
         )
+
         self.auto_play_button.grid(pady=10)
+
+        self.restart_button = Button(
+            self.info_frame,
+            text="Restart",
+            command=self.restart_game,
+            font=("Verdana", 14)
+        )
+
+        self.restart_button.grid(pady=10)
 
 
         self.master.title('2048')
@@ -115,6 +125,10 @@ class GameGrid(Frame):
         else:
             self.auto_play_button.configure(text="Start Auto Play")
             self.hint_label.configure(text="")
+
+    def restart_game(self):
+        self.matrix = logic.new_game(c.GRID_LEN)
+        self.update_grid_cells()
 
     def update_hint(self):
         if self.hint_mode:

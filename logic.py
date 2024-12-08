@@ -1,6 +1,5 @@
 import random
 import constants as c
-#test
 
 def new_game(n):
     matrix = []
@@ -92,7 +91,7 @@ def merge(mat, done):
     return mat, done
 
 def up(game):
-    print("up")
+    # print("up")
     # return matrix after shifting up
     game = transpose(game)
     game, done = cover_up(game)
@@ -102,7 +101,7 @@ def up(game):
     return game, done
 
 def down(game):
-    print("down")
+    # print("down")
     # return matrix after shifting down
     game = reverse(transpose(game))
     game, done = cover_up(game)
@@ -112,7 +111,7 @@ def down(game):
     return game, done
 
 def left(game):
-    print("left")
+    # print("left")
     # return matrix after shifting left
     game, done = cover_up(game)
     game, done = merge(game, done)
@@ -120,7 +119,7 @@ def left(game):
     return game, done
 
 def right(game):
-    print("right")
+    # print("right")
     # return matrix after shifting right
     game = reverse(game)
     game, done = cover_up(game)
