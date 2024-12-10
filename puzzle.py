@@ -56,16 +56,15 @@ class GameGrid(Frame):
         )
 
         self.auto_play_button.grid(pady=10)
-
-        self.restart_button = Button(
-            self.info_frame,
-            text="Restart",
-            command=self.restart_game,
+        
+        # play again
+        self.play_again_button = Button(
+            self.info_frame, 
+            text="Play Again/Restart", 
+            command=self.reset_game, 
             font=("Verdana", 14)
         )
-
-        self.restart_button.grid(pady=10)
-
+        self.play_again_button.grid(pady=10)
 
         self.master.title('2048')
         self.master.bind("<Key>", self.key_down)
@@ -125,10 +124,6 @@ class GameGrid(Frame):
         else:
             self.auto_play_button.configure(text="Start Auto Play")
             self.hint_label.configure(text="")
-
-    def restart_game(self):
-        self.matrix = logic.new_game(c.GRID_LEN)
-        self.update_grid_cells()
 
     def update_hint(self):
         if self.hint_mode:
@@ -278,5 +273,22 @@ class GameGrid(Frame):
         while self.matrix[index[0]][index[1]] != 0:
             index = (gen(), gen())
         self.matrix[index[0]][index[1]] = 2
+        
+    def reset_game(self):
+        # Reset the game matrix
+        self.matrix = logic.new_game(c.GRID_LEN)
+    
+        # Update the grid display manually
+        for i in range(c.GRID_LEN):
+            for j in range(c.GRID_LEN):
+                new_value = self.matrix[i][j]
+                self.grid_cells[i][j].configure(
+                    text=str(new_value) if new_value != 0 else "",
+                    bg=c.BACKGROUND_COLOR_DICT.get(new_value, c.BACKGROUND_COLOR_CELL_EMPTY)
+                )
+    
+        # Reset the score
+        self.score = 0
+        self.score_label.config(text=f"Score: {self.score}")
 
 game_grid = GameGrid()
