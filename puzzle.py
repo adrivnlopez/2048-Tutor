@@ -54,6 +54,7 @@ class GameGrid(Frame):
             command=self.toggle_autoplay,
             font=("Verdana", 14)
         )
+
         self.auto_play_button.grid(pady=10)
         
         # play again

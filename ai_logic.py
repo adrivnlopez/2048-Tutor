@@ -17,14 +17,23 @@ class GameAI:
         
         monotonicity = self.calculate_monotonicity(matrix)             # preference for tiles increasing in a direction
         
+        corner_weight = self.calculate_corner_weight(matrix)
         # weighted evaluation
         return (
-            total_score * 0.4 +     # score matters
-            empty_cells * 50 +      # more empty cells are good
+            total_score * 0.2 +     # score matters
+            empty_cells * 60 +      # more empty cells are good
             smoothness * 30 +       # smooth board preferred
-            monotonicity * 40       # monotonic arrangement is good
+            monotonicity * 40 +     # monotonic arrangement is good
+            corner_weight * 50      # keep larger tiles in corner
         )
     
+    def calculate_corner_weight(self, matrix):
+        corners = [
+            matrix[0][0], matrix[0][-1],
+            matrix[-1][0], matrix[-1][-1]
+        ]
+        return max(corners)
+
     def calculate_smoothness(self, matrix):
         smoothness = 0
         for i in range(len(matrix)):
@@ -63,20 +72,19 @@ class GameAI:
         
         return monotonicity
     
-    def minimax_with_alpha_beta(self, matrix, depth, alpha, beta, is_maximizing):           # minimax alg w/ alpha-beta pruning
-
-        # check game state
+    def minimax_with_alpha_beta(self, matrix, depth, alpha, beta, is_maximizing):
+        # Check game state
         game_state = logic.game_state(matrix)
         if game_state == 'win':
             return float('inf')
         if game_state == 'lose':
             return float('-inf')
         
-        # reached search depth
+        # Reached search depth
         if depth == 0:
             return self.evaluate_board(matrix)
         
-        # maximizer (AI's turn)
+        # Maximizer (AI's turn)
         if is_maximizing:
             max_eval = float('-inf')
             moves = [
@@ -87,62 +95,63 @@ class GameAI:
             ]
             
             for move_name, move_func in moves:
-                
                 new_matrix, done = move_func(copy.deepcopy(matrix))
                 
-                
                 if done:
-                    
                     new_matrix = logic.add_random_tile(new_matrix)
                     
-                    # recursively evaluate
+                    # Recursively evaluate
                     eval_score = self.minimax_with_alpha_beta(
-                        new_matrix, depth-1, alpha, beta, False
+                        new_matrix, depth - 1, alpha, beta, False
                     )
                     
                     max_eval = max(max_eval, eval_score)
                     alpha = max(alpha, eval_score)
                     
-                    # pruning
+                    # Pruning
                     if beta <= alpha:
                         break
             
             return max_eval
         
-        # minimizer (random tile placement)
+        # Minimizer (random tile placement)
         else:
             min_eval = float('inf')
+            empty_tiles = [
+                (i, j) for i in range(len(matrix)) for j in range(len(matrix[0])) if matrix[i][j] == 0
+            ]
             
-            # try placing 2 or 4 in empty cells
-            for i in range(len(matrix)):
-                for j in range(len(matrix[0])):
-                    if matrix[i][j] == 0:
-                        # try placing 2
-                        new_matrix = copy.deepcopy(matrix)
-                        new_matrix[i][j] = 2
-                        
-                        eval_score = self.minimax_with_alpha_beta(
-                            new_matrix, depth-1, alpha, beta, True
-                        )
-                        
-                        min_eval = min(min_eval, eval_score)
-                        beta = min(beta, eval_score)
-                        
-                        # try placing 4
-                        new_matrix[i][j] = 4
-                        
-                        eval_score = self.minimax_with_alpha_beta(
-                            new_matrix, depth-1, alpha, beta, True
-                        )
-                        
-                        min_eval = min(min_eval, eval_score)
-                        beta = min(beta, eval_score)
-                        
-                        # pruning
-                        if beta <= alpha:
-                            break
+            for i, j in empty_tiles:
+                # Try placing 2 (90% probability)
+                new_matrix_2 = copy.deepcopy(matrix)
+                new_matrix_2[i][j] = 2
+                eval_score_2 = self.minimax_with_alpha_beta(
+                    new_matrix_2, depth - 1, alpha, beta, True
+                )
+                
+                # Try placing 4 (10% probability)
+                new_matrix_4 = copy.deepcopy(matrix)
+                new_matrix_4[i][j] = 4
+                eval_score_4 = self.minimax_with_alpha_beta(
+                    new_matrix_4, depth - 1, alpha, beta, True
+                )
+                
+                # Weighted average
+                eval_score = 0.9 * eval_score_2 + 0.1 * eval_score_4
+                
+                min_eval = min(min_eval, eval_score)
+                beta = min(beta, eval_score)
+                
+                # Pruning
+                if beta <= alpha:
+                    break
             
             return min_eval
+
+
+    def get_num_empty_tiles(self, matrix):
+        return sum(row.count(0) for row in matrix)
+
     
     def get_best_move(self, matrix):
 
@@ -160,12 +169,19 @@ class GameAI:
             
             new_matrix, done = move_func(copy.deepcopy(matrix))
             
-           
+            empty_tiles = self.get_num_empty_tiles(matrix)
+            if empty_tiles > 6:
+                depth = 4
+            elif empty_tiles > 3:
+                depth = 3
+            else:
+                depth = 2
+
             if done:
                 # Score this move
                 new_matrix = logic.add_random_tile(new_matrix)
                 move_score = self.minimax_with_alpha_beta(
-                    new_matrix, self.search_depth, float('-inf'), float('inf'), False
+                    new_matrix, depth, float('-inf'), float('inf'), False
                 )
                 
                 # Update best move
