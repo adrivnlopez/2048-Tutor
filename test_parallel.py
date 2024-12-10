@@ -2,7 +2,7 @@ import logic
 import constants as c
 from ai_logic import GameAI
 from concurrent.futures import ProcessPoolExecutor, as_completed
-
+from collections import Counter
 
 def simulate_game(game_id):
     """
@@ -68,19 +68,22 @@ def run_simulations_concurrently(num_games, num_workers=4):
     # Calculate summary statistics
     wins = sum(1 for r in results if r["result"] == "win")
     losses = len(results) - wins
-    average_moves = sum(r["moves"] for r in results) / len(results)
-    average_max_tile = sum(r["max_tile"] for r in results) / len(results)
+    # Count occurrences of the maximum tile achieved in each game
+    max_tile_counts = Counter(r["max_tile"] for r in results)
+
+    # Sort tile counts by tile value
+    sorted_max_tile_counts = sorted(max_tile_counts.items())
 
     # Display results
     print("\n--- Simulation Results ---")
     print(f"Total games: {num_games}")
     print(f"Wins: {wins}")
     print(f"Losses: {losses}")
-    print(f"Average moves per game: {average_moves:.2f}")
-    print(f"Average highest tile: {average_max_tile:.2f}")
-
+    print("\n--- Max Tile Occurrences ---")
+    for tile, count in sorted_max_tile_counts:
+        print(f"Tile {tile}: {count} occurrences")
 
 if __name__ == "__main__":
-    num_games = 10  # Number of simulations to run
-    num_workers = 8  # Number of parallel workers
+    num_games = 3  # Number of simulations to run
+    num_workers = 10  # Number of parallel workers
     run_simulations_concurrently(num_games, num_workers)
