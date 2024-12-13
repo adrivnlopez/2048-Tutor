@@ -84,6 +84,6 @@ def run_simulations_concurrently(num_games, num_workers=4):
         print(f"Tile {tile}: {count} occurrences")
 
 if __name__ == "__main__":
-    num_games = 3  # Number of simulations to run
-    num_workers = 10  # Number of parallel workers
+    num_games = 100  # Number of simulations to run
+    num_workers = 25  # Number of parallel workers
     run_simulations_concurrently(num_games, num_workers)
