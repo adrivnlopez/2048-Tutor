@@ -39,12 +39,25 @@ root/
 ---
 
 **File Descriptions:**
-1. puzzle.py
-*   **Purpose:** The main file for the game. It definies the graphical interface and handles all user interactions.
+
+1. **puzzle.py**
+*   The main file for the game. It definies the graphical interface and handles all user interactions.
 *   This file includes the GUI, game flow as well as buttons for our AI implementation
 
-2. logic.py
-3. constants.py
-4. ai_logic.py
-5. test_parallel.py
-6. README.md
+2. **logic.py**
+*   Implements the game rules as well as board mechanics.
+*   Responsible for grid settings, styling and functions for controlling the game.
+
+3. **constants.py**
+*   Stores all of the configurable constants for the game.
+*   Board dimensions, grid size, padding, styling and keybindings can all be changed here.
+
+4. **ai_logic.py**
+*   Implements the AI logic that we have created.
+*   This is where the AI calculates move based on current game state with the goal of maximizing higher tiles.
+
+5. **test_parallel.py**
+*   This file contains our testing code. Users can change the amount of games taht are getting simulated.
+
+6. **README.md**
+*   Used for documentation and understanding the project structure.
