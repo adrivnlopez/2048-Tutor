@@ -24,7 +24,7 @@ Added restart button to start new game
 
 ---
 
-**Folder Structure:**
+**Folder Structure**
 
 ---
 
@@ -46,6 +46,8 @@ root/
 ---
 
 **File Descriptions:**
+
+---
 
 1. **puzzle.py**
 *   The main file for the game. It definies the graphical interface and handles all user interactions.
