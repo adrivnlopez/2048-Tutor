@@ -29,12 +29,19 @@ Added restart button to start new game
 ---
 
 root/
+
 ├── puzzle.py           # Main entry point for the game
+
 ├── logic.py            # Core game logic for tile movements and merging
+
 ├── constants.py        # Constants for board size, colors, fonts, and key mappings
+
 ├── ai_logic.py         # AI implementation
+
 ├── test_parallel.py    # Simulation Implementation
+
 └── README.md           # Documentation
+
 
 ---
 
