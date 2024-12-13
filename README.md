@@ -17,9 +17,11 @@ To start the game, run:
     
     $ python3 puzzle.py
 
+![](img/2048new.gif)
+Added probability for placement of tiles (90% for 2 and 10% for 4)
 
-Contributors:
-==
+Added AI autoplay feature to run through game
 
-- [Yanghun Tay](http://github.com/yangshun)
-- [Emmanuel Goh](http://github.com/emman27)
+Added reveal hint feature to provide hint for which direction to move
+
+Added restart button to start new game
